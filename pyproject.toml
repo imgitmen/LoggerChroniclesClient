@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "logger-chronicles-client"
+version = "1.0.0"
+authors = [
+  { name="imgitmen", email="it.smi@socotec.com" },
+]
+description = "Python client to connect to Logger Chronicles Api"
+readme = "README.md"
+requires-python = ">=3.10.0"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+
+dependencies = [
+    "aiohttp"
+]
+
+[project.urls]
+Homepage = "https://github.com/imgitmen/LoggerChroniclesClient"
