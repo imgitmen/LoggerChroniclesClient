@@ -1,10 +1,27 @@
+from abc import ABC
 from datetime import date
+import json
 import requests
 import aiohttp
+import urllib
 
-class RequestResult:
+class RequestResult(ABC):
     status_code: int
     errors: str | None
+    
+class PostResult(RequestResult):
+    pass
+
+class NavigateItem:
+    name: str
+    is_file: bool
+
+class NavigateResult(RequestResult):
+    data: list[NavigateItem] | None
+    
+class DownloadResult(RequestResult):
+    data: bytearray | None
+    mime_type: str
 
 class HttpClient:
     __host: str
@@ -27,7 +44,24 @@ class HttpClient:
         url = self.__host + f"/api/{self.__apiversion}/backup"
         return url
     
-    def Backup(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> RequestResult:
+    def __create_navigate_url(self, path: str | None) -> str:
+        url = self.__host + f"/api/{self.__apiversion}/backup/"
+        if path is not None:
+            splitted = path.split("/")
+            for s in splitted:
+                url = url + urllib.parse.quote(s) + "/"
+        
+        return url
+    
+    def __create_download_url(self, path: str) -> str:
+        url = self.__host + f"/api/{self.__apiversion}/file/"
+        if path is not None:
+            splitted = path.split("/")
+            for s in splitted:
+                url = url + urllib.parse.quote(s) + "/"
+        
+        return url
+    def Backup(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
         url = self.__create_backup_url()
         response = None
         result = None
@@ -46,7 +80,7 @@ class HttpClient:
         
         return result
     
-    async def BackupAsync(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> RequestResult:
+    async def BackupAsync(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
         url = self.__create_backup_url()
         response = None
         result = None
@@ -65,4 +99,50 @@ class HttpClient:
                     else:
                         result.errors = None
                     
+        return result
+    
+    def Navigate(self, path: str | None = None) -> NavigateResult:
+        url = self.__create_navigate_url(path)
+        response = None
+        result = NavigateResult()
+        
+        response = requests.get(url, headers={"X-API-Key":self.__apikey})
+        
+        result.status_code = response.status_code
+        
+        if response.ok:
+            data = []
+
+            for d in response.json():
+                item = NavigateItem()
+                item.name = d["name"]
+                item.is_file = d["isfile"]
+                data.append(item)
+            
+            result.data = data
+            result.errors = None
+        else:
+            result.errors = response.json()
+            result.data = None
+        
+        return result
+    
+    def Download(self, path: str) -> DownloadResult:
+        url = self.__create_download_url(path)
+        response = None
+        result = DownloadResult()
+        
+        response = requests.get(url, headers={"X-API-Key":self.__apikey})
+                
+        result.status_code = response.status_code
+        
+        if response.ok:
+            result.data = response.content
+            result.mime_type = response.headers["content-type"]
+            result.errors = None
+        else:
+            result.errors = response.json()
+            result.data = None
+            result.mime_type = None
+        
         return result
