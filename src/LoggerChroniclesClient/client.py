@@ -11,6 +11,7 @@ class RequestResult(ABC):
     errors: str | None
     
 class PostResult(RequestResult):
+    data: str | None
     pass
 
 class NavigateItem:
@@ -61,7 +62,6 @@ class HttpClient:
     def Backup(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
         url = self.__create_url("backup")
         self.__logger.debug("calling url {Url}", Url = url)
-        self.__lo
         response = None
         result = None
         with open(file, "rb") as f:
@@ -76,6 +76,7 @@ class HttpClient:
             result.errors = response.json()
         else:
             result.errors = None
+            result.data = response.headers["location"]
         
         return result
     
@@ -92,12 +93,13 @@ class HttpClient:
                         "file": f
                         }
                 async with session.post(url, data=body,) as response:
-                    result = RequestResult()
+                    result = PostResult()
                     result.status_code = response.status
                     if not response.ok:
                         result.errors = await response.json()
                     else:
                         result.errors = None
+                        result.data = response.headers["location"]
                     
         return result
     
@@ -147,5 +149,25 @@ class HttpClient:
             result.data = None
             result.mime_type = None
         
+        return result
+    
+    async def DownloadAsync(self, path: str | list[str]) -> DownloadResult:
+        url = self.__create_url("file", path)
+        self.__logger.debug("calling url {Url}", Url = url)
+        response = None
+        result = DownloadResult()
+        
+        async with aiohttp.ClientSession(headers={"X-API-Key":self.__apikey}) as session:
+            async with session.get(url) as response:
+                result.status_code = response.status
+                if not response.ok:
+                    result.errors = await response.json()
+                    result.data = None
+                    result.mime_type = None
+                else:
+                    result.data = response.content
+                    result.mime_type = response.headers["content-type"]
+                    result.errors = None
         
         return result
+        
