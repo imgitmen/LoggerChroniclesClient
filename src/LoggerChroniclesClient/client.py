@@ -39,30 +39,25 @@ class HttpClient:
         
         if self.__apiversion is None or self.__apiversion.strip() == "":
             self.__apiversion = "v1"
+    
+    def __create_url(self, endpoint: str, path: str | list[str] | None = None):
+        url = self.__host + f"/api/{self.__apiversion}/{endpoint}/"
+        splitted = []
+
+        if path is not None:
+            if type(path) == str:
+                splitted = path.split("/")
+                
+            if type(path) == list:
+                splitted = path
             
-    def __create_backup_url(self) -> str:
-        url = self.__host + f"/api/{self.__apiversion}/backup"
-        return url
-    
-    def __create_navigate_url(self, path: str | None) -> str:
-        url = self.__host + f"/api/{self.__apiversion}/backup/"
-        if path is not None:
-            splitted = path.split("/")
             for s in splitted:
-                url = url + urllib.parse.quote(s) + "/"
+                url = url + urllib.parse.quote(str(s)) + "/"
         
         return url
     
-    def __create_download_url(self, path: str) -> str:
-        url = self.__host + f"/api/{self.__apiversion}/file/"
-        if path is not None:
-            splitted = path.split("/")
-            for s in splitted:
-                url = url + urllib.parse.quote(s) + "/"
-        
-        return url
     def Backup(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
-        url = self.__create_backup_url()
+        url = self.__create_url("backup")
         response = None
         result = None
         with open(file, "rb") as f:
@@ -81,7 +76,7 @@ class HttpClient:
         return result
     
     async def BackupAsync(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
-        url = self.__create_backup_url()
+        url = self.__create_url("backup")
         response = None
         result = None
         async with aiohttp.ClientSession(headers={"X-API-Key":self.__apikey}) as session:
@@ -101,8 +96,8 @@ class HttpClient:
                     
         return result
     
-    def Navigate(self, path: str | None = None) -> NavigateResult:
-        url = self.__create_navigate_url(path)
+    def Navigate(self, path: str | list[str] | None = None) -> NavigateResult:
+        url = self.__create_url("backup", path)
         response = None
         result = NavigateResult()
         
@@ -127,8 +122,8 @@ class HttpClient:
         
         return result
     
-    def Download(self, path: str) -> DownloadResult:
-        url = self.__create_download_url(path)
+    def Download(self, path: str | list[str]) -> DownloadResult:
+        url = self.__create_url("file", path)
         response = None
         result = DownloadResult()
         
