@@ -1,6 +1,7 @@
 from abc import ABC
 from datetime import date
 import json
+import logging
 import requests
 import aiohttp
 import urllib
@@ -30,6 +31,7 @@ class HttpClient:
     
     
     def __init__(self, host: str, apikey: str | None, apiversion: str | None):
+        self.__logger = logging.getLogger()
         if host is None or host.__len__() == 0:
             raise ValueError("host")
         
@@ -58,6 +60,8 @@ class HttpClient:
     
     def Backup(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
         url = self.__create_url("backup")
+        self.__logger.debug("calling url {Url}", Url = url)
+        self.__lo
         response = None
         result = None
         with open(file, "rb") as f:
@@ -77,6 +81,7 @@ class HttpClient:
     
     async def BackupAsync(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
         url = self.__create_url("backup")
+        self.__logger.debug("calling url {Url}", Url = url)
         response = None
         result = None
         async with aiohttp.ClientSession(headers={"X-API-Key":self.__apikey}) as session:
@@ -98,6 +103,7 @@ class HttpClient:
     
     def Navigate(self, path: str | list[str] | None = None) -> NavigateResult:
         url = self.__create_url("backup", path)
+        self.__logger.debug("calling url {Url}", Url = url)
         response = None
         result = NavigateResult()
         
@@ -124,6 +130,7 @@ class HttpClient:
     
     def Download(self, path: str | list[str]) -> DownloadResult:
         url = self.__create_url("file", path)
+        self.__logger.debug("calling url {Url}", Url = url)
         response = None
         result = DownloadResult()
         
@@ -139,5 +146,6 @@ class HttpClient:
             result.errors = response.json()
             result.data = None
             result.mime_type = None
+        
         
         return result
