@@ -69,8 +69,8 @@ class HttpClient:
             files = { "file": f}
             response = requests.post(url, data = body, files=files, headers={"X-API-Key":self.__apikey})
         
-            
         result = RequestResult()
+        
         result.status_code = response.status_code
         if not response.ok:
             result.errors = response.json()
