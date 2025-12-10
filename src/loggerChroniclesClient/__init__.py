@@ -1,5 +1,7 @@
-from loggerChroniclesClient.client import HttpClient
-from loggerChroniclesClient.client import DownloadResult
-from loggerChroniclesClient.client import NavigateItem
-from loggerChroniclesClient.client import PostResult
-from loggerChroniclesClient.client import NavigateResult
+from .client import HttpClient
+from .client import DownloadResult
+from .client import NavigateItem
+from .client import PostResult
+from .client import NavigateResult
+
+__all__ = ["HttpClient", "DownloadResult", "NavigateItem", "PostResult", "NavigateResult"]
