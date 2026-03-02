@@ -60,7 +60,7 @@ class HttpClient:
         return url
     
     def Backup(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
-        url = self.__create_url("backup")
+        url = self.__create_url("backup_file")
         self.__logger.debug("calling url {Url}", Url = url)
         response = None
         result = None
@@ -81,7 +81,7 @@ class HttpClient:
         return result
     
     async def BackupAsync(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, file: str) -> PostResult:
-        url = self.__create_url("backup")
+        url = self.__create_url("backup_file")
         self.__logger.debug("calling url {Url}", Url = url)
         response = None
         result = None
@@ -103,8 +103,29 @@ class HttpClient:
                     
         return result
     
+    def BackupJson(self, loggerTypeCode: str, loggerSerial: str, timestamp: date, data: list[dict] | dict) -> PostResult:
+        url = self.__create_url("backup_json")
+        self.__logger.debug("calling url {Url}", Url = url)
+        response = None
+        result = None
+        if not data is list:
+            data = list(data)
+        body = { "loggerTypeCode": loggerTypeCode, "loggerSerial": loggerSerial, "timestamp": timestamp.isoformat(), "data": data }
+        response = requests.post(url, json = body, headers={"X-API-Key":self.__apikey})
+        
+        result = RequestResult()
+        
+        result.status_code = response.status_code
+        if not response.ok:
+            result.errors = response.json()
+        else:
+            result.errors = None
+            result.data = response.headers["location"]
+        
+        return result
+
     def Navigate(self, path: str | list[str] | None = None) -> NavigateResult:
-        url = self.__create_url("backup", path)
+        url = self.__create_url("backup_file", path)
         self.__logger.debug("calling url {Url}", Url = url)
         response = None
         result = NavigateResult()
